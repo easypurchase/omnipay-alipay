@@ -2,9 +2,13 @@
 
 namespace Omnipay\Alipay\Requests;
 
+use Exception;
 use Omnipay\Alipay\Common\Signer;
 use Omnipay\Common\Exception\InvalidRequestException;
+use Omnipay\Common\Http\Exception\NetworkException;
 use Omnipay\Common\Message\AbstractRequest;
+use Omnipay\Common\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 abstract class AbstractAopRequest extends AbstractRequest
 {
@@ -15,6 +19,12 @@ abstract class AbstractAopRequest extends AbstractRequest
     protected $encryptKey;
 
     protected $alipayPublicKey;
+
+    protected $alipayRootCert;
+
+    protected $appCert;
+
+    protected $checkAlipayPublicCert = true;
 
     protected $endpoint = 'https://openapi.alipay.com/gateway.do';
 
@@ -28,16 +38,19 @@ abstract class AbstractAopRequest extends AbstractRequest
      * gateway, but will usually be either an associative array, or a SimpleXMLElement.
      *
      * @return mixed
+     * @throws InvalidRequestException
      */
     public function getData()
     {
         $this->validateParams();
 
+        $this->getCertSN();
+
         $this->setDefaults();
 
         $this->convertToString();
 
-        $data = $this->parameters->all();
+        $data = $this->getParameters();
 
         $data['method'] = $this->method;
 
@@ -49,6 +62,9 @@ abstract class AbstractAopRequest extends AbstractRequest
     }
 
 
+    /**
+     * @throws InvalidRequestException
+     */
     public function validateParams()
     {
         $this->validate(
@@ -60,6 +76,19 @@ abstract class AbstractAopRequest extends AbstractRequest
             'version',
             'biz_content'
         );
+    }
+
+
+    public function getCertSN()
+    {
+        if (strtoupper($this->getSignType()) === 'RSA2') {
+            $alipayRootCert = $this->getAlipayRootCert();
+            $appCert = $this->getAppCert();
+            if (is_file($alipayRootCert) && is_file($appCert)) {
+                $this->setParameter('alipay_root_cert_sn', getRootCertSN($alipayRootCert));
+                $this->setParameter('app_cert_sn', getCertSN($appCert));
+            }
+        }
     }
 
 
@@ -101,6 +130,14 @@ abstract class AbstractAopRequest extends AbstractRequest
     }
 
 
+    /**
+     * @param array  $params
+     * @param string $signType
+     *
+     * @return string|null
+     * @throws Exception
+     * @throws InvalidRequestException
+     */
     protected function sign($params, $signType)
     {
         $signer = new Signer($params);
@@ -113,7 +150,7 @@ abstract class AbstractAopRequest extends AbstractRequest
         } elseif ($signType == 'RSA2') {
             $sign = $signer->signWithRSA($this->getPrivateKey(), OPENSSL_ALGO_SHA256);
         } else {
-            throw new InvalidRequestException('The signType is invalid');
+            throw new InvalidRequestException('The sign type is invalid');
         }
 
         return $sign;
@@ -137,6 +174,72 @@ abstract class AbstractAopRequest extends AbstractRequest
     public function setPrivateKey($value)
     {
         $this->privateKey = $value;
+
+        return $this;
+    }
+
+
+    /**
+     * @return mixed
+     */
+    public function getAlipayRootCert()
+    {
+        return $this->alipayRootCert;
+    }
+
+
+    /**
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setAlipayRootCert($value)
+    {
+        $this->alipayRootCert = $value;
+
+        return $this;
+    }
+
+
+    /**
+     * @return mixed
+     */
+    public function getAppCert()
+    {
+        return $this->appCert;
+    }
+
+
+    /**
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setAppCert($value)
+    {
+        $this->appCert = $value;
+
+        return $this;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function getCheckAlipayPublicCert()
+    {
+        return $this->checkAlipayPublicCert;
+    }
+
+
+    /**
+     * @param bool $value
+     *
+     * @return $this
+     */
+    public function setCheckAlipayPublicCert($value)
+    {
+        $this->checkAlipayPublicCert = $value;
 
         return $this;
     }
@@ -176,9 +279,8 @@ abstract class AbstractAopRequest extends AbstractRequest
     /**
      * @param mixed $data
      *
-     * @return mixed|\Omnipay\Common\Message\ResponseInterface|\Psr\Http\Message\StreamInterface
-     * @throws \Psr\Http\Client\Exception\NetworkException
-     * @throws \Psr\Http\Client\Exception\RequestException
+     * @return mixed|ResponseInterface|StreamInterface
+     * @throws NetworkException
      */
     public function sendData($data)
     {
@@ -190,7 +292,7 @@ abstract class AbstractAopRequest extends AbstractRequest
             'Content-Type' => 'application/x-www-form-urlencoded'
         ];
 
-        $response = $this->httpClient->send($method, $url, $headers, $body);
+        $response = $this->httpClient->request($method, $url, $headers, $body);
 
         $payload = $this->decode($response->getBody());
 
@@ -483,6 +585,29 @@ abstract class AbstractAopRequest extends AbstractRequest
     }
 
 
+    /**
+     * @return mixed
+     */
+    public function getAppAuthToken()
+    {
+        return $this->getParameter('app_auth_token');
+    }
+
+
+    /**
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setAppAuthToken($value)
+    {
+        return $this->setParameter('app_auth_token', $value);
+    }
+
+
+    /**
+     * @throws InvalidRequestException
+     */
     public function validateBizContent()
     {
         $data = $this->getBizContent();
@@ -499,6 +624,9 @@ abstract class AbstractAopRequest extends AbstractRequest
     }
 
 
+    /**
+     * @throws InvalidRequestException
+     */
     public function validateBizContentOne()
     {
         $data = $this->getBizContent();
@@ -538,6 +666,9 @@ abstract class AbstractAopRequest extends AbstractRequest
     }
 
 
+    /**
+     * @throws InvalidRequestException
+     */
     protected function validateOne()
     {
         $keys = func_get_args();

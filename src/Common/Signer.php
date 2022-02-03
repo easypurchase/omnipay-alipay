@@ -7,6 +7,7 @@ use Exception;
 /**
  * Sign Tool for Alipay
  * Class Signer
+ *
  * @package Omnipay\Alipay\Common
  */
 class Signer
@@ -124,16 +125,29 @@ class Signer
     }
 
 
+    /**
+     * @param string $privateKey
+     * @param int    $alg
+     *
+     * @return string
+     * @throws Exception
+     */
     public function signWithRSA($privateKey, $alg = OPENSSL_ALGO_SHA1)
     {
         $content = $this->getContentToSign();
 
-        $sign = $this->signContentWithRSA($content, $privateKey, $alg);
-
-        return $sign;
+        return $this->signContentWithRSA($content, $privateKey, $alg);
     }
 
 
+    /**
+     * @param string $content
+     * @param string $privateKey
+     * @param int    $alg
+     *
+     * @return string
+     * @throws Exception
+     */
     public function signContentWithRSA($content, $privateKey, $alg = OPENSSL_ALGO_SHA1)
     {
         $privateKey = $this->prefix($privateKey);
@@ -158,9 +172,8 @@ class Signer
         }
 
         openssl_free_key($res);
-        $sign = base64_encode($sign);
 
-        return $sign;
+        return base64_encode($sign);
     }
 
 
@@ -206,8 +219,8 @@ class Signer
     /**
      * Convert one line key to standard format
      *
-     * @param $key
-     * @param $type
+     * @param string $key
+     * @param int    $type
      *
      * @return string
      */
@@ -241,6 +254,15 @@ class Signer
     }
 
 
+    /**
+     * @param string $content
+     * @param string $sign
+     * @param string $publicKey
+     * @param int    $alg
+     *
+     * @return bool
+     * @throws Exception
+     */
     public function verifyWithRSA($content, $sign, $publicKey, $alg = OPENSSL_ALGO_SHA1)
     {
         $publicKey = $this->prefix($publicKey);

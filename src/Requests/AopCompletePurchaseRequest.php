@@ -4,6 +4,7 @@ namespace Omnipay\Alipay\Requests;
 
 use Omnipay\Alipay\Responses\AopCompletePurchaseResponse;
 use Omnipay\Alipay\Responses\AopTradeQueryResponse;
+use Omnipay\Common\Exception\InvalidRequestException;
 
 class AopCompletePurchaseRequest extends AbstractAopRequest
 {
@@ -13,6 +14,7 @@ class AopCompletePurchaseRequest extends AbstractAopRequest
      * gateway, but will usually be either an associative array, or a SimpleXMLElement.
      *
      * @return mixed
+     * @throws InvalidRequestException
      */
     public function getData()
     {
@@ -40,7 +42,7 @@ class AopCompletePurchaseRequest extends AbstractAopRequest
     /**
      * Send the request with specified data
      *
-     * @param  mixed $data The data to send
+     * @param mixed $data The data to send
      *
      * @return AopCompletePurchaseResponse
      */
@@ -68,6 +70,10 @@ class AopCompletePurchaseRequest extends AbstractAopRequest
                 $request->setEndpoint($this->getEndpoint());
                 $request->setBizContent(['trade_no' => $tn]);
                 $request->setPrivateKey($this->getPrivateKey());
+
+                // Must set cert path if you used certificate mode
+                $request->setAlipayRootCert($this->getAlipayRootCert());
+                $request->setAppCert($this->getAppCert());
 
                 /**
                  * @var AopTradeQueryResponse $response

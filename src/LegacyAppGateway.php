@@ -3,11 +3,23 @@
 namespace Omnipay\Alipay;
 
 use Omnipay\Alipay\Requests\LegacyAppPurchaseRequest;
+use Omnipay\Alipay\Requests\LegacyRefundNoPwdRequest;
+use Omnipay\Common\Message\AbstractRequest;
+use Omnipay\Common\Message\RequestInterface;
 
 /**
  * Class LegacyAppGateway
+ *
  * @package Omnipay\Alipay
  * @link    https://doc.open.alipay.com/doc2/detail?treeId=59&articleId=103563&docType=1
+ * @link    https://docs.open.alipay.com/59/103563
+ * @method RequestInterface authorize(array $options = [])
+ * @method RequestInterface completeAuthorize(array $options = [])
+ * @method RequestInterface capture(array $options = [])
+ * @method RequestInterface void(array $options = [])
+ * @method RequestInterface createCard(array $options = [])
+ * @method RequestInterface updateCard(array $options = [])
+ * @method RequestInterface deleteCard(array $options = [])
  */
 class LegacyAppGateway extends AbstractLegacyGateway
 {
@@ -56,10 +68,21 @@ class LegacyAppGateway extends AbstractLegacyGateway
     /**
      * @param array $parameters
      *
-     * @return \Omnipay\Common\Message\AbstractRequest
+     * @return AbstractRequest
      */
     public function purchase(array $parameters = [])
     {
         return $this->createRequest(LegacyAppPurchaseRequest::class, $parameters);
+    }
+
+
+    /**
+     * @param array $parameters
+     *
+     * @return LegacyRefundNoPwdRequest|AbstractRequest
+     */
+    public function refundNoPwd(array $parameters = [])
+    {
+        return $this->createRequest(LegacyRefundNoPwdRequest::class, $parameters);
     }
 }

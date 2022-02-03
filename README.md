@@ -48,12 +48,18 @@ The following gateways are provided by this package:
  * @var AopAppGateway $gateway
  */
 $gateway = Omnipay::create('Alipay_AopPage');
-$gateway->setSignType('RSA2'); // RSA/RSA2/MD5
+$gateway->setSignType('RSA2'); // RSA/RSA2/MD5. Use certificate mode must set RSA2
 $gateway->setAppId('the_app_id');
 $gateway->setPrivateKey('the_app_private_key');
-$gateway->setAlipayPublicKey('the_alipay_public_key');
+$gateway->setAlipayPublicKey('the_alipay_public_key'); // Need not set this when used certificate mode
 $gateway->setReturnUrl('https://www.example.com/return');
 $gateway->setNotifyUrl('https://www.example.com/notify');
+
+// Must set cert path if you used certificate mode
+//$gateway->setAlipayRootCert('the_alipay_root_cert'); // alipayRootCert.crt
+//$gateway->setAlipayPublicCert('the_alipay_public_cert'); // alipayCertPublicKey_RSA2.crt
+//$gateway->setAppCert('the_app_public_cert'); // appCertPublicKey.crt
+//$gateway->setCheckAlipayPublicCert(true);
 
 /**
  * @var AopTradePagePayResponse $response
@@ -112,6 +118,7 @@ or better yet, fork the library and submit a pull request.
 [link-wiki-aop-app]: https://github.com/lokielse/omnipay-alipay/wiki/Aop-APP-Gateway
 [link-wiki-aop-f2f]: https://github.com/lokielse/omnipay-alipay/wiki/Aop-Face-To-Face-Gateway
 [link-wiki-aop-wap]: https://github.com/lokielse/omnipay-alipay/wiki/Aop-WAP-Gateway
+[link-wiki-aop-js]: https://github.com/lokielse/omnipay-alipay/wiki/Aop-JS-Gateway
 [link-wiki-legacy-app]: https://github.com/lokielse/omnipay-alipay/wiki/Legacy-APP-Gateway
 [link-wiki-legacy-express]: https://github.com/lokielse/omnipay-alipay/wiki/Legacy-Express-Gateway
 [link-wiki-legacy-wap]: https://github.com/lokielse/omnipay-alipay/wiki/Legacy-WAP-Gateway
@@ -119,6 +126,7 @@ or better yet, fork the library and submit a pull request.
 [link-doc-aop-app]: https://doc.open.alipay.com/docs/doc.htm?treeId=204&articleId=105051&docType=1
 [link-doc-aop-f2f]: https://doc.open.alipay.com/docs/doc.htm?treeId=194&articleId=105072&docType=1
 [link-doc-aop-wap]: https://doc.open.alipay.com/docs/doc.htm?treeId=203&articleId=105288&docType=1
+[link-doc-aop-js]: https://myjsapi.alipay.com/jsapi/native/trade-pay.html
 [link-doc-legacy-app]: https://doc.open.alipay.com/doc2/detail?treeId=59&articleId=103563&docType=1
 [link-doc-legacy-express]: https://doc.open.alipay.com/docs/doc.htm?treeId=108&articleId=103950&docType=1
 [link-doc-legacy-wap]: https://doc.open.alipay.com/docs/doc.htm?treeId=60&articleId=103564&docType=1

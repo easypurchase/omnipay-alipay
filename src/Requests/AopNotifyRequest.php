@@ -115,11 +115,16 @@ class AopNotifyRequest extends AbstractAopRequest
     }
 
 
+    /**
+     * @throws InvalidRequestException
+     * @throws Exception
+     */
     protected function verifySignature()
     {
         $signer = new Signer($this->params->all());
         $signer->setSort($this->sort);
         $signer->setEncodePolicy($this->encodePolicy);
+        $signer->setIgnores(['sign','sign_type']);
         $content = $signer->getContentToSign();
 
         $sign = $this->params->get('sign');
@@ -136,7 +141,9 @@ class AopNotifyRequest extends AbstractAopRequest
         }
     }
 
-
+    /**
+     * @throws InvalidRequestException
+     */
     protected function verifyNotifyId()
     {
         if (! $this->getPartner()) {
